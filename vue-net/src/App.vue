@@ -12,9 +12,9 @@ import MobileNet from './components/MobileNet.vue'
   </header>
 
   <main>
-    <Suspense>
+
       <MobileNet />
- </Suspense>
+
     
   </main>
 </template>

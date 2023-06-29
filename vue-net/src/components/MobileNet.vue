@@ -1,12 +1,10 @@
 <script setup>
 // Be sure to load TensorFlow.js on your page. See
 // https://github.com/tensorflow/tfjs#getting-started.
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, inject } from 'vue'
 import * as tf from '@tensorflow/tfjs';
 
-const model = await tf.loadGraphModel(
-  'tfjs-model_imagenet_mobilenet_v3_large_100_224_classification_5_default_1/model.json'
-)
+const model = inject("model");
 
 const input = ref(null);
 const img = ref(null);
@@ -40,6 +38,7 @@ const className = computed(async () => {
 })
 
 function updateImage(event){
+
     // const image = event.target.value
     // const image = new Image();
     //     //   image.height = 100;
@@ -49,12 +48,12 @@ function updateImage(event){
     img.value.src = URL.createObjectURL(file);
     // img.value.width = "200px";
     // img.value.height = "200px";
-    img.value.onload = calcClassName;
+
 }
 async function calcClassName(event){
 
 const imageTensor = tf.browser.fromPixels(img.value)
-console.log(imageTensor.arraySync())
+// console.log(imageTensor.arraySync())
 const logits = model.predict(preprocess(imageTensor))
 
 const classIndex = await tf.argMax(tf.squeeze(logits)).data()
@@ -65,6 +64,8 @@ classNameMsg.value = className
 }
 
 onMounted(() => {
+img.value.onload = calcClassName;
+
   // Create WebSocket connection.
 const socket = new WebSocket("ws://localhost:8765");
 
@@ -83,6 +84,6 @@ socket.addEventListener("message", (event) => {
 
 <template>
     <input type="file" ref="input" @change="updateImage">
-    <img ref="img" width="300" height="300">
+    <img ref="img" src="../assets/logo.svg" >
     {{ classNameMsg }}
 </template>
