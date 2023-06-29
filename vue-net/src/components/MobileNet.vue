@@ -1,7 +1,7 @@
 <script setup>
 // Be sure to load TensorFlow.js on your page. See
 // https://github.com/tensorflow/tfjs#getting-started.
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import * as tf from '@tensorflow/tfjs';
 
 const model = await tf.loadGraphModel(
@@ -10,6 +10,7 @@ const model = await tf.loadGraphModel(
 
 const input = ref(null);
 const img = ref(null);
+const classNameMsg = ref("");
 
 
 // Preprocesses a single image tensor to prepare it as input for the model.
@@ -17,6 +18,7 @@ const img = ref(null);
 // Returns a tensor of shape [batch_size, height, width, channels], where the
 // batch_size in this case is 1.
 function preprocess(imageTensor) {
+    // console.log(imageTensor);
   const widthToHeight = imageTensor.shape[1] / imageTensor.shape[0]
   let squareCrop
   if (widthToHeight > 1) {
@@ -37,8 +39,7 @@ const className = computed(async () => {
 
 })
 
-async function calcClassName(event){
-
+function updateImage(event){
     // const image = event.target.value
     // const image = new Image();
     //     //   image.height = 100;
@@ -48,20 +49,40 @@ async function calcClassName(event){
     img.value.src = URL.createObjectURL(file);
     // img.value.width = "200px";
     // img.value.height = "200px";
-    console.log(img.value)
-    const imageTensor = tf.browser.fromPixels(img.value)
-    const logits = model.predict(preprocess(imageTensor))
+    img.value.onload = calcClassName;
+}
+async function calcClassName(event){
 
-    const classIndex = await tf.argMax(tf.squeeze(logits)).data()
-    const className = model.metadata['classNames'][classIndex[0]]
-    classNameMsg.value = className
+const imageTensor = tf.browser.fromPixels(img.value)
+console.log(imageTensor.arraySync())
+const logits = model.predict(preprocess(imageTensor))
+
+const classIndex = await tf.argMax(tf.squeeze(logits)).data()
+// console.log(logits.arraySync())
+// console.log(classIndex)
+const className = model.metadata['classNames'][classIndex[0]]
+classNameMsg.value = className
 }
 
+onMounted(() => {
+  // Create WebSocket connection.
+const socket = new WebSocket("ws://localhost:8765");
+
+// Connection opened
+socket.addEventListener("open", (event) => {
+  socket.send("Hello Server!");
+});
+
+// Listen for messages
+socket.addEventListener("message", (event) => {
+  console.log("Message from server ", event.data);
+});
+})
 
 </script>
 
 <template>
-    ddd<input type="file" ref="input" @input="calcClassName">ddd
-    <img ref="img" width="100" height="100">
-    {{ className }}
+    <input type="file" ref="input" @change="updateImage">
+    <img ref="img" width="300" height="300">
+    {{ classNameMsg }}
 </template>
