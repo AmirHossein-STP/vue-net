@@ -1,3 +1,9 @@
 # fastapi
 # "uvicorn[standard]"
 websockets
+ipykernel
+imutils
+numpy
+tqdm
+opencv-python
+scikit-learn
