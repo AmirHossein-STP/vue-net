@@ -1,5 +1,5 @@
 <script setup>
-import MobileNet from './components/MobileNet.vue'
+import { RouterView } from 'vue-router'
 </script>
 
 <template>
@@ -12,7 +12,7 @@ import MobileNet from './components/MobileNet.vue'
   </header>
 
   <main>
-    <MobileNet />
+    <Suspense><RouterView></RouterView></Suspense>
   </main>
 </template>
 

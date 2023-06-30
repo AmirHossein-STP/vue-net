@@ -1,13 +1,12 @@
 <script setup>
 // Be sure to load TensorFlow.js on your page. See
 // https://github.com/tensorflow/tfjs#getting-started.
-import { ref, computed, onMounted, inject } from 'vue'
+import { ref, onMounted } from 'vue'
 import * as tf from '@tensorflow/tfjs'
+import UploadImage from '../components/UploadImage.vue'
 
-const model = inject('model')
+const model = await tf.loadGraphModel('./src/assets/model_2/model.json')
 
-const input = ref(null)
-const img = ref(null)
 const classNameMsg = ref('')
 
 // Preprocesses a single image tensor to prepare it as input for the model.
@@ -15,7 +14,7 @@ const classNameMsg = ref('')
 // Returns a tensor of shape [batch_size, height, width, channels], where the
 // batch_size in this case is 1.
 function preprocess(imageTensor) {
-  console.log(imageTensor);
+  console.log(imageTensor)
   const widthToHeight = imageTensor.shape[1] / imageTensor.shape[0]
   let squareCrop
   if (widthToHeight > 1) {
@@ -29,38 +28,22 @@ function preprocess(imageTensor) {
     squareCrop = [[0, cropLeft, 1, cropRight]]
   } // Expand image input dimensions to add a batch dimension of size 1.
   const crop = tf.image.cropAndResize(tf.expandDims(imageTensor), squareCrop, [0], [224, 224])
-  console.log(crop.div(255));
+  console.log(crop.div(255))
   return crop.div(255)
 }
 
-const className = computed(async () => {})
-
-function updateImage(event) {
-  // const image = event.target.value
-  // const image = new Image();
-  //     //   image.height = 100;
-  //     //   image.title = file.name;
-  // image.src = event.target.value
-  const file = input.value.files[0]
-  img.value.src = URL.createObjectURL(file)
-  // img.value.width = "200px";
-  // img.value.height = "200px";
-}
-async function calcClassName(event) {
-  const imageTensor = tf.browser.fromPixels(img.value)
-  // console.log(imageTensor.arraySync())
+async function calcClassName(img) {
+  const imageTensor = tf.browser.fromPixels(img)
   const logits = model.predict(preprocess(imageTensor))
 
   // const classIndex = await tf.argMax(tf.squeeze(logits)).data()
-  console.log(logits.arraySync())
+  console.log(logits.arraySync()[0])
   // console.log(classIndex)
   // const className = model.metadata['classNames'][classIndex[0]]
-  classNameMsg.value = "SALAM"
+  classNameMsg.value = logits.arraySync()[0]>0.5 ? "No" : "Yes";
 }
 
 onMounted(() => {
-  img.value.onload = calcClassName
-
   // Create WebSocket connection.
   const socket = new WebSocket('ws://localhost:8765')
 
@@ -77,7 +60,6 @@ onMounted(() => {
 </script>
 
 <template>
-  <input type="file" ref="input" @change="updateImage" />
-  <img ref="img" src="../assets/logo.svg" />
+  <UploadImage @newimage="calcClassName"></UploadImage>
   {{ classNameMsg }}
 </template>
