@@ -1,5 +1,7 @@
 <script setup>
 import { RouterView } from 'vue-router'
+import { ref } from 'vue'
+const loading = ref(false)
 </script>
 
 <template>
@@ -12,7 +14,13 @@ import { RouterView } from 'vue-router'
   </header>
 
   <main>
-    <Suspense><RouterView></RouterView></Suspense>
+    
+    <Suspense>
+      <RouterView></RouterView>
+      <template #fallback>
+        <span class="loading loading-ring loading-lg"></span>
+      </template>
+    </Suspense>
   </main>
 </template>
 

@@ -7,7 +7,8 @@ import UploadImage from '../components/UploadImage.vue'
 
 const model = await tf.loadGraphModel('./src/assets/model_2/model.json')
 
-const classNameMsg = ref('')
+// const classNameMsg = ref('')
+const hasTumor = ref(false)
 
 // Preprocesses a single image tensor to prepare it as input for the model.
 //
@@ -40,7 +41,8 @@ async function calcClassName(img) {
   console.log(logits.arraySync()[0])
   // console.log(classIndex)
   // const className = model.metadata['classNames'][classIndex[0]]
-  classNameMsg.value = logits.arraySync()[0]>0.5 ? "No" : "Yes";
+  hasTumor.value = (logits.arraySync()[0] < 0.5)
+  // classNameMsg.value = logits.arraySync()[0]>0.5 ? fa : "Yes";
 }
 
 onMounted(() => {
@@ -60,6 +62,9 @@ onMounted(() => {
 </script>
 
 <template>
-  <UploadImage @newimage="calcClassName"></UploadImage>
-  {{ classNameMsg }}
+  <span class="loading loading-ring loading-lg"></span>
+  <UploadImage @newimage="calcClassName" :has_tumor="hasTumor">
+
+  </UploadImage>
+  
 </template>

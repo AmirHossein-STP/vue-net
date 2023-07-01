@@ -26,3 +26,7 @@ coverage
 *.njsproj
 *.sln
 *.sw?
+
+
+src/assets/model_2/
+public/downloaded-model/
